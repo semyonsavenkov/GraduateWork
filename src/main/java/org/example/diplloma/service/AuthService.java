@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import jakarta.security.auth.message.AuthException;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.diplloma.authorization.JwtAuth;
 import org.example.diplloma.authorization.JwtProvider;
 import org.example.diplloma.authorization.JwtRequest;
@@ -12,24 +13,25 @@ import org.example.diplloma.repository.UserRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.example.diplloma.repository.AuthRepository;
 
 import java.util.HashMap;
 import java.util.Map;
 
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
     private final UserService userService;
     private final UserRepository userRepository;
+    private AuthRepository authRepository;
     private final Map<String, String> refreshStorage = new HashMap<>();
     private final JwtProvider jwtProvider;
 
     public JwtResponse login(@NonNull JwtRequest authRequest) throws AuthException {
 
         final UserDetails user = userService.loadUserByUsername(authRequest.getLogin());
-//        final User user = userRepository.findByLogin(authRequest.getLogin());
 
         if (user.getPassword().equals(authRequest.getPassword())) {
             final String accessToken = jwtProvider.generateAccessToken(user);
@@ -69,6 +71,16 @@ public class AuthService {
             }
         }
         throw new AuthException("Невалидный JWT токен");
+    }
+
+    public void logout(String authToken) {
+        if (authToken.startsWith("Bearer ")) {
+            authToken = authToken.substring(7);
+        }
+        final String username = authRepository.getUserNameByToken(authToken);
+        log.info("User {} logout", username);
+        authRepository.removeTokenAndUsernameByToken(authToken);
+
     }
 
     public JwtAuth getAuthInfo() {
