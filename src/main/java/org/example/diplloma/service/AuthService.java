@@ -1,90 +1,50 @@
 package org.example.diplloma.service;
 
-import io.jsonwebtoken.Claims;
-import jakarta.security.auth.message.AuthException;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.diplloma.authorization.JwtAuth;
-import org.example.diplloma.authorization.JwtProvider;
-import org.example.diplloma.authorization.JwtRequest;
-import org.example.diplloma.authorization.JwtResponse;
-import org.example.diplloma.repository.UserRepository;
+import org.example.diplloma.authorization.TokenProvider;
+import org.example.diplloma.dto.AuthorizationRequest;
+import org.example.diplloma.repository.AuthRepository;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-import org.example.diplloma.repository.AuthRepository;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserService userService;
-    private final UserRepository userRepository;
-    private AuthRepository authRepository;
-    private final Map<String, String> refreshStorage = new HashMap<>();
-    private final JwtProvider jwtProvider;
+    private AuthRepository authorizationRepository;
+    private AuthenticationManager authenticationManager;
+    private TokenProvider tokenProvider;
+    private UserService userService;
 
-    public JwtResponse login(@NonNull JwtRequest authRequest) throws AuthException {
 
-        final UserDetails user = userService.loadUserByUsername(authRequest.getLogin());
 
-        if (user.getPassword().equals(authRequest.getPassword())) {
-            final String accessToken = jwtProvider.generateAccessToken(user);
-            final String refreshToken = jwtProvider.generateRefreshToken(user);
-            refreshStorage.put(user.getUsername(), refreshToken);
-            return new JwtResponse(accessToken, refreshToken);
-        } else {
-            throw new AuthException("Неправильный пароль");
-        }
-    }
-
-    public JwtResponse getAccessToken(@NonNull String refreshToken) {
-        if (jwtProvider.validateRefreshToken(refreshToken)) {
-            final Claims claims = jwtProvider.getRefreshClaims(refreshToken);
-            final String login = claims.getSubject();
-            final String saveRefreshToken = refreshStorage.get(login);
-            if (saveRefreshToken != null && saveRefreshToken.equals(refreshToken)) {
-                final UserDetails user = userService.loadUserByUsername(login);
-                final String accessToken = jwtProvider.generateAccessToken(user);
-                return new JwtResponse(accessToken, null);
-            }
-        }
-        return new JwtResponse(null, null);
-    }
-
-    public JwtResponse refresh(@NonNull String refreshToken) throws AuthException {
-        if (jwtProvider.validateRefreshToken(refreshToken)) {
-            final Claims claims = jwtProvider.getRefreshClaims(refreshToken);
-            final String login = claims.getSubject();
-            final String saveRefreshToken = refreshStorage.get(login);
-            if (saveRefreshToken != null && saveRefreshToken.equals(refreshToken)) {
-                final UserDetails user = userService.loadUserByUsername(login);
-                final String accessToken = jwtProvider.generateAccessToken(user);
-                final String newRefreshToken = jwtProvider.generateRefreshToken(user);
-                refreshStorage.put(user.getUsername(), newRefreshToken);
-                return new JwtResponse(accessToken, newRefreshToken);
-            }
-        }
-        throw new AuthException("Невалидный JWT токен");
+    public String login(AuthorizationRequest authorizationRequest) {
+        final String username = authorizationRequest.getLogin();
+        final String password = authorizationRequest.getPassword();
+        Authentication authentication = authenticationManager.authenticate
+                (new UsernamePasswordAuthenticationToken(username, password));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        UserDetails userDetails = userService.loadUserByUsername(username);
+        String token = tokenProvider.generateToken(userDetails);
+        authorizationRepository.addTokenAndUsername(token, username);
+        log.info("User {} is authorized", username);
+        return token;
     }
 
     public void logout(String authToken) {
         if (authToken.startsWith("Bearer ")) {
             authToken = authToken.substring(7);
         }
-        final String username = authRepository.getUserNameByToken(authToken);
+        final String username = authorizationRepository.getUserNameByToken(authToken);
         log.info("User {} logout", username);
-        authRepository.removeTokenAndUsernameByToken(authToken);
+        authorizationRepository.removeTokenAndUsernameByToken(authToken);
 
-    }
-
-    public JwtAuth getAuthInfo() {
-        return (JwtAuth) SecurityContextHolder.getContext().getAuthentication();
     }
 
 }

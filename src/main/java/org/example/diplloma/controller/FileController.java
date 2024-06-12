@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/file")
+@RequestMapping("cloud")
 public class FileController {
 
     private FileService service;
@@ -29,7 +29,7 @@ public class FileController {
         File file = service.downloadFile(authToken, filename);
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(file.getType()))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
                 .body(file.getContent());
     }
 
@@ -58,7 +58,7 @@ public class FileController {
     @GetMapping("/list")
     List<JwtFileResponse> getAllFiles(@RequestHeader("auth-token") String authToken, @RequestParam("limit") Integer limit) {
         return service.getAllFiles(authToken, limit).stream()
-                .map(f -> new JwtFileResponse(f.getName(), f.getSize()))
+                .map(f -> new JwtFileResponse(f.getFilename(), f.getSize()))
                 .collect(Collectors.toList());
     }
 }

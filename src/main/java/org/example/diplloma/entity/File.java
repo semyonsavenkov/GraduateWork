@@ -12,11 +12,11 @@ import org.springframework.data.relational.core.mapping.Table;
 @AllArgsConstructor
 @Data
 @Entity
-@Table(name = "files", schema = "netology")
+@Table(name = "files", schema = "diploma")
 public class File {
     @Id
     @Column(nullable = false, unique = true)
-    private String name;
+    private String filename;
 
     @Column(nullable = false)
     private String type;

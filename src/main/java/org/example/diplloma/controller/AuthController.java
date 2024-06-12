@@ -1,10 +1,11 @@
 package org.example.diplloma.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.diplloma.authorization.JwtRequest;
-import org.example.diplloma.authorization.JwtResponse;
+import org.example.diplloma.dto.AuthorizationRequest;
+import org.example.diplloma.dto.AuthorizationResponse;
 import org.example.diplloma.service.AuthService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,30 +14,20 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+    private final AuthService service;
 
-    @PostMapping("login")
-    public ResponseEntity<JwtResponse> login(@RequestBody JwtRequest authRequest) {
-        final JwtResponse token = authService.login(authRequest);
-        return ResponseEntity.ok(token);
+    @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<AuthorizationResponse> login(@RequestBody AuthorizationRequest authorizationRequest) {
+        AuthorizationResponse response = new AuthorizationResponse(service.login(authorizationRequest));
+        if (response.getAuthToken() == null)
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader("auth-token") String authToken) {
-        authService.logout(authToken);
+        service.logout(authToken);
         return ResponseEntity.ok(HttpStatus.OK);
-    }
-
-    @PostMapping("token")
-    public ResponseEntity<JwtResponse> getNewAccessToken(@RequestBody RefreshJwtRequest request) {
-        final JwtResponse token = authService.getAccessToken(request.getRefreshToken());
-        return ResponseEntity.ok(token);
-    }
-
-    @PostMapping("refresh")
-    public ResponseEntity<JwtResponse> getNewRefreshToken(@RequestBody RefreshJwtRequest request) {
-        final JwtResponse token = authService.refresh(request.getRefreshToken());
-        return ResponseEntity.ok(token);
     }
 
 }
