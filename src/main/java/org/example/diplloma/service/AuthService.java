@@ -3,7 +3,7 @@ package org.example.diplloma.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.diplloma.authorization.TokenProvider;
-import org.example.diplloma.dto.AuthorizationRequest;
+import org.example.diplloma.authorization.AuthorizationRequest;
 import org.example.diplloma.repository.AuthRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

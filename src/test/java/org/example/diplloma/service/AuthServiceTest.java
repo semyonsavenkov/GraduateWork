@@ -2,8 +2,8 @@ package org.example.diplloma.service;
 
 import jakarta.security.auth.message.AuthException;
 import org.example.diplloma.authorization.TokenProvider;
-import org.example.diplloma.dto.AuthorizationRequest;
-import org.example.diplloma.dto.AuthorizationResponse;
+import org.example.diplloma.authorization.AuthorizationRequest;
+import org.example.diplloma.authorization.AuthorizationResponse;
 import org.example.diplloma.repository.AuthRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

@@ -1,8 +1,8 @@
 package org.example.diplloma.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.diplloma.dto.AuthorizationRequest;
-import org.example.diplloma.dto.AuthorizationResponse;
+import org.example.diplloma.authorization.AuthorizationRequest;
+import org.example.diplloma.authorization.AuthorizationResponse;
 import org.example.diplloma.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

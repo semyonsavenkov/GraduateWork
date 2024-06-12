@@ -1,4 +1,4 @@
-package org.example.diplloma.dto;
+package org.example.diplloma.authorization;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

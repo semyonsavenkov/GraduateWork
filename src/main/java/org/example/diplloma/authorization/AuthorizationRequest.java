@@ -1,4 +1,4 @@
-package org.example.diplloma.dto;
+package org.example.diplloma.authorization;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
